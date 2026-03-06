@@ -28,6 +28,7 @@ This website is ready to be hosted for free using **GitHub Pages**.
 5. Your website will be live in a few minutes!   
 
 Contact information:   
-Email: aruzhanmaratova2009@gmail.com   
--P.S. If you have any questions about this website or if you need a help with troubleshooting - email me!   
-Hope you enjoy it!❤️   
+- Email: aruzhanmaratova2009@gmail.com
+P.S. If you have any questions about this website or if you need a help with troubleshooting - email me!
+
+Hope you will enjoy it!❤️   
