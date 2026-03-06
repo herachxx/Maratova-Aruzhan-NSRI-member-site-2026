@@ -27,4 +27,4 @@ This website is ready to be hosted for free using **GitHub Pages**.
 4. Under "Build and deployment", select the `main` branch and click **Save**.
 5. Your website will be live in a few minutes!
 
-## Enjoy!❤️
+Hope you enjoy it!❤️
