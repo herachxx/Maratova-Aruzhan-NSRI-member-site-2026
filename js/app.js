@@ -1,30 +1,29 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Setup the intersection observer for scroll animations
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-  };
+// smooth scroll animation
 
-  const scrollObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target); // Stop observing once revealed
-      }
-    });
-  }, observerOptions);
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
-  // Apply observer to all base reveal elements
-  const revealElements = document.querySelectorAll('.reveal');
-  revealElements.forEach(el => scrollObserver.observe(el));
+anchor.addEventListener('click', function (e) {
 
-  // Handle staggered animations inside grids
-  const staggeredGrids = document.querySelectorAll('.stagger-grid');
-  staggeredGrids.forEach(grid => {
-    const items = grid.querySelectorAll('.reveal');
-    items.forEach((item, index) => {
-      // Add a slight delay based on the item's position in the grid
-      item.style.transitionDelay = `${index * 0.15}s`;
-    });
-  });
+ e.preventDefault();
+
+ document.querySelector(this.getAttribute('href')).scrollIntoView({
+ behavior: 'smooth'
+ });
+
+});
+
+});
+
+// navbar shadow on scroll
+
+const navbar = document.querySelector('.navbar');
+
+window.addEventListener('scroll', () => {
+
+if(window.scrollY > 50){
+navbar.style.boxShadow = '0 10px 30px rgba(0,0,0,0.4)';
+}else{
+navbar.style.boxShadow = 'none';
+}
+
 });
