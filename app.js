@@ -1,262 +1,289 @@
-/**
- * app.js — Aruzhan Maratova · NSRI AIS Kazakhstan
- * Single side-nav: trigger button always visible top-left.
- * Nav slides in; site-wrap shifts right on desktop.
- */
-
 'use strict';
 
-const qs  = (sel, ctx = document) => ctx.querySelector(sel);
-const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+/* ─── Helpers ─── */
+const $  = id  => document.getElementById(id);
+const qs = sel => document.querySelector(sel);
+const qa = sel => [...document.querySelectorAll(sel)];
 
 
-/* ─────────────────────────────────────
-   SCROLL PROGRESS BAR
-───────────────────────────────────── */
-function initScrollProgress() {
-  const bar = qs('#progress-bar');
-  if (!bar) return;
-  const update = () => {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    bar.style.width = max > 0 ? `${(window.scrollY / max) * 100}%` : '0%';
-  };
-  window.addEventListener('scroll', update, { passive: true });
-  update();
-}
-
-
-/* ─────────────────────────────────────
+/* ─────────────────────────────────────────────
    SIDE NAV
-───────────────────────────────────── */
-function initSideNav() {
-  const trigger  = qs('#nav-trigger');
-  const nav      = qs('#side-nav');
-  const closeBtn = qs('#nav-close');
-  const siteWrap = qs('#site-wrap');
+   Opens automatically. Toggle on button click.
+   Desktop: shifts .site-wrap right.
+   Mobile:  slides over content.
+───────────────────────────────────────────── */
+function initNav() {
+  const trigger  = $('nav-trigger');
+  const nav      = $('side-nav');
+  const wrap     = $('site-wrap');
+
   if (!trigger || !nav) return;
 
-  let isOpen = false;
+  // Helper: are we on desktop?
+  const isDesktop = () => window.innerWidth > 900;
 
-  const openNav = () => {
-    isOpen = true;
-    nav.classList.add('is-open');
-    trigger.classList.add('is-open');
+  // Apply open state to all relevant elements
+  function applyOpen() {
+    trigger.classList.add('open');
+    nav.classList.add('open');
     trigger.setAttribute('aria-expanded', 'true');
-    if (window.innerWidth > 900) siteWrap?.classList.add('nav-open');
-  };
+    if (isDesktop()) wrap?.classList.add('open');
+  }
 
-  const closeNav = () => {
-    isOpen = false;
-    nav.classList.remove('is-open');
-    trigger.classList.remove('is-open');
+  function applyClose() {
+    trigger.classList.remove('open');
+    nav.classList.remove('open');
     trigger.setAttribute('aria-expanded', 'false');
-    siteWrap?.classList.remove('nav-open');
-  };
+    wrap?.classList.remove('open');
+  }
 
-  trigger.addEventListener('click', () => (isOpen ? closeNav() : openNav()));
-  closeBtn?.addEventListener('click', closeNav);
+  // Open on load (body has class nav-is-open from HTML — just sync JS state)
+  let isOpen = true;
+  applyOpen();
 
-  // Close on any nav link click
-  qsa('a', nav).forEach(link => link.addEventListener('click', closeNav));
-
-  // Close on Escape
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) closeNav(); });
-
-  // Close on outside click
-  document.addEventListener('click', e => {
-    if (isOpen && !nav.contains(e.target) && !trigger.contains(e.target)) closeNav();
+  // Toggle on button click
+  trigger.addEventListener('click', () => {
+    isOpen = !isOpen;
+    isOpen ? applyOpen() : applyClose();
   });
 
-  // On resize: remove push on mobile
+  // Close when clicking a nav link
+  qa('.side-nav-links a').forEach(a => {
+    a.addEventListener('click', () => {
+      // On mobile, close after navigating
+      if (!isDesktop()) {
+        isOpen = false;
+        applyClose();
+      }
+    });
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && isOpen) {
+      isOpen = false;
+      applyClose();
+    }
+  });
+
+  // On resize: if shrinking to mobile, remove push; if expanding to desktop, restore
   window.addEventListener('resize', () => {
-    if (window.innerWidth <= 900) siteWrap?.classList.remove('nav-open');
+    if (isOpen) {
+      if (isDesktop()) wrap?.classList.add('open');
+      else             wrap?.classList.remove('open');
+    }
   }, { passive: true });
 }
 
 
-/* ─────────────────────────────────────
-   ACTIVE NAV LINK
-───────────────────────────────────── */
-function initActiveNavLink() {
-  const sections = qsa('section[id]');
-  const links    = qsa('.side-nav-links a');
-  if (!links.length) return;
+/* ─────────────────────────────────────────────
+   SCROLL PROGRESS BAR
+───────────────────────────────────────────── */
+function initScrollProgress() {
+  const bar = $('progress-bar');
+  if (!bar) return;
 
-  const update = () => {
-    let current = '';
-    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 160) current = s.id; });
-    links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === `#${current}`));
-  };
+  function update() {
+    const scrolled = window.scrollY;
+    const total    = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = total > 0 ? `${(scrolled / total) * 100}%` : '0%';
+  }
 
   window.addEventListener('scroll', update, { passive: true });
   update();
 }
 
 
-/* ─────────────────────────────────────
+/* ─────────────────────────────────────────────
+   ACTIVE NAV LINK
+───────────────────────────────────────────── */
+function initActiveLink() {
+  const sections = qa('section[id]');
+  const links    = qa('.side-nav-links a');
+  if (!links.length) return;
+
+  function update() {
+    let current = '';
+    sections.forEach(sec => {
+      if (window.scrollY >= sec.offsetTop - 180) current = sec.id;
+    });
+    links.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === `#${current}`);
+    });
+  }
+
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+}
+
+
+/* ─────────────────────────────────────────────
    SCROLL REVEAL
-───────────────────────────────────── */
-function initScrollReveal() {
-  const els = qsa('.reveal, .reveal-left, .reveal-scale');
+   Elements with class="reveal" fade up as they
+   enter the viewport.
+───────────────────────────────────────────── */
+function initReveal() {
+  const els = qa('.reveal');
   if (!els.length) return;
 
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('is-visible'); obs.unobserve(e.target); }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -48px 0px' });
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    }),
+    { threshold: 0.1, rootMargin: '0px 0px -44px 0px' }
+  );
 
-  els.forEach(el => obs.observe(el));
+  els.forEach(el => observer.observe(el));
 }
 
 
-/* ─────────────────────────────────────
-   STAGGERED ANIMATIONS
-───────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   STAGGER — add delay to card groups
+───────────────────────────────────────────── */
 function initStagger() {
-  [
-    '.about-grid .card',
-    '.top-skills .top-skill-card',
-    '.nsri-stats-grid .nsri-stat-card',
+  const groups = [
+    '.about-right .card',
+    '.top-skills .skill-card',
+    '.nsri-stats .nsri-stat',
     '.goals-grid .goal-card',
     '.contacts-grid .contact-card',
-    '.join-links .link-card',
+    '.join-grid .join-card',
     '.pathways-grid .pathway-card',
     '.timeline .timeline-item',
-  ].forEach(sel => {
-    qsa(sel).forEach((el, i) => { el.style.transitionDelay = `${i * 0.09}s`; });
-  });
-}
+  ];
 
-
-/* ─────────────────────────────────────
-   SMOOTH SCROLL
-───────────────────────────────────── */
-function initSmoothScroll() {
-  qsa('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      const href = a.getAttribute('href');
-      if (href === '#') return;
-      const target = qs(href);
-      if (!target) return;
-      e.preventDefault();
-      window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 32, behavior: 'smooth' });
+  groups.forEach(selector => {
+    qa(selector).forEach((el, i) => {
+      el.style.transitionDelay = `${i * 0.08}s`;
     });
   });
 }
 
 
-/* ─────────────────────────────────────
-   STAT COUNTER ANIMATION
-───────────────────────────────────── */
-function parseNum(t) {
-  const c = t.replace(/[,$+]/g, '').trim();
-  if (c.endsWith('K')) return parseFloat(c) * 1000;
-  return parseFloat(c) || null;
+/* ─────────────────────────────────────────────
+   SMOOTH SCROLL
+───────────────────────────────────────────── */
+function initSmoothScroll() {
+  qa('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      if (!id) return;
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      const offset = target.getBoundingClientRect().top + window.scrollY - 28;
+      window.scrollTo({ top: offset, behavior: 'smooth' });
+    });
+  });
 }
 
-function formatNum(orig, val) {
-  let r = orig.includes('$') ? '$' : '';
-  if (orig.includes('K') && val >= 1000) r += (val / 1000).toFixed(0) + 'K';
-  else if (orig.includes(',')) r += Math.round(val).toLocaleString();
-  else r += Math.round(val).toString();
-  if (orig.includes('+')) r += '+';
-  return r;
+
+/* ─────────────────────────────────────────────
+   STAT COUNTERS
+   Counts up numbers when they scroll into view.
+───────────────────────────────────────────── */
+function parseValue(text) {
+  const s = text.replace(/[$,+]/g, '').trim();
+  if (s.endsWith('K')) return parseFloat(s) * 1000;
+  return parseFloat(s) || null;
+}
+
+function formatValue(original, value) {
+  const rounded = Math.round(value);
+  let out = '';
+  if (original.includes('$')) out += '$';
+  if (original.includes('K') && value >= 1000) {
+    out += (value / 1000).toFixed(0) + 'K';
+  } else if (original.includes(',')) {
+    out += rounded.toLocaleString();
+  } else {
+    out += rounded.toString();
+  }
+  if (original.includes('+')) out += '+';
+  return out;
 }
 
 function animateCounter(el) {
-  const orig = el.textContent.trim();
-  const max  = parseNum(orig);
-  if (!max) return;
-  const t0   = performance.now();
-  const step = now => {
-    const t = Math.min((now - t0) / 1500, 1);
-    el.textContent = formatNum(orig, (1 - Math.pow(1 - t, 3)) * max);
-    if (t < 1) requestAnimationFrame(step); else el.textContent = orig;
-  };
+  const original = el.textContent.trim();
+  const target   = parseValue(original);
+  if (!target) return;
+
+  const duration = 1400;
+  const start    = performance.now();
+
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased    = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    el.textContent = formatValue(original, eased * target);
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = original; // restore exact string
+    }
+  }
+
   requestAnimationFrame(step);
 }
 
 function initCounters() {
-  const els = qsa('.stat-number, .nsri-stat-number');
+  const els = qa('.stat-n, .nsri-n');
   if (!els.length) return;
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { animateCounter(e.target); obs.unobserve(e.target); } });
-  }, { threshold: 0.5 });
-  els.forEach(el => obs.observe(el));
+
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCounter(e.target);
+        observer.unobserve(e.target);
+      }
+    }),
+    { threshold: 0.6 }
+  );
+
+  els.forEach(el => observer.observe(el));
 }
 
 
-/* ─────────────────────────────────────
-   PHOTO PARALLAX (desktop)
-───────────────────────────────────── */
-function initPhotoParallax() {
-  const c = qs('.photo-container');
-  if (!c || window.matchMedia('(max-width: 900px)').matches) return;
-  let ticking = false;
+/* ─────────────────────────────────────────────
+   PHOTO PARALLAX (desktop only)
+───────────────────────────────────────────── */
+function initParallax() {
+  const photo = qs('.photo-wrap');
+  if (!photo || window.matchMedia('(max-width: 900px)').matches) return;
+
+  let rafPending = false;
+
   document.addEventListener('mousemove', e => {
-    if (ticking) return;
-    ticking = true;
+    if (rafPending) return;
+    rafPending = true;
     requestAnimationFrame(() => {
-      const dx = (e.clientX / window.innerWidth  - 0.5) * 2;
-      const dy = (e.clientY / window.innerHeight - 0.5) * 2;
-      c.style.transform = `perspective(800px) rotateY(${dx * 3.5}deg) rotateX(${-dy * 2.5}deg)`;
-      ticking = false;
+      const rx = (e.clientX / window.innerWidth  - 0.5) * 2;
+      const ry = (e.clientY / window.innerHeight - 0.5) * 2;
+      photo.style.transform = `perspective(800px) rotateY(${rx * 3}deg) rotateX(${-ry * 2.2}deg)`;
+      rafPending = false;
     });
   });
+
   document.addEventListener('mouseleave', () => {
-    c.style.transition = 'transform 0.6s ease';
-    c.style.transform = '';
-    setTimeout(() => { c.style.transition = ''; }, 650);
+    photo.style.transition = 'transform 0.55s ease';
+    photo.style.transform  = '';
+    setTimeout(() => { photo.style.transition = ''; }, 600);
   });
 }
 
 
-/* ─────────────────────────────────────
-   CURSOR DOT
-───────────────────────────────────── */
-function initCursorDot() {
-  if (window.matchMedia('(hover: none)').matches) return;
-  const dot = document.createElement('div');
-  Object.assign(dot.style, {
-    position: 'fixed', width: '6px', height: '6px',
-    background: 'var(--gold)', borderRadius: '50%',
-    pointerEvents: 'none', zIndex: '9998', opacity: '0',
-    transform: 'translate(-50%, -50%)',
-    transition: 'opacity 0.3s ease, width 0.2s ease, height 0.2s ease',
-    mixBlendMode: 'difference',
-  });
-  document.body.appendChild(dot);
-
-  let mx = 0, my = 0, cx = 0, cy = 0, visible = false;
-  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; if (!visible) { dot.style.opacity = '0.7'; visible = true; } });
-  document.addEventListener('mouseleave', () => { dot.style.opacity = '0'; visible = false; });
-
-  qsa('a, button, .card, .pill, .tag, .top-skill-card, .goal-card, .contact-card').forEach(el => {
-    el.addEventListener('mouseenter', () => { dot.style.width = dot.style.height = '12px'; dot.style.opacity = '0.45'; });
-    el.addEventListener('mouseleave', () => { dot.style.width = dot.style.height = '6px'; dot.style.opacity = '0.7'; });
-  });
-
-  const tick = () => {
-    cx += (mx - cx) * 0.18; cy += (my - cy) * 0.18;
-    dot.style.left = `${cx}px`; dot.style.top = `${cy}px`;
-    requestAnimationFrame(tick);
-  };
-  tick();
-}
-
-
-/* ─────────────────────────────────────
-   INIT
-───────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   INIT — run on DOM ready
+───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
+  initNav();
   initScrollProgress();
-  initSideNav();
-  initActiveNavLink();
-  initScrollReveal();
+  initActiveLink();
+  initReveal();
   initStagger();
   initSmoothScroll();
   initCounters();
-  initPhotoParallax();
-  initCursorDot();
+  initParallax();
 });
