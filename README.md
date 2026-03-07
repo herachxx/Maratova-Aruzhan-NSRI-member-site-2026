@@ -41,8 +41,8 @@ To host online, upload all files (maintaining the folder structure) to any web h
 
 ## Important Links (embedded in site)  
 
-- Apply as NSRI Researcher:   https://docs.google.com/forms/d/e/1FAIpQLSdRpaV17WwNGAAy86FF9VFYrpmZ_yRSQEMISS_Uq5lRHS1fow/viewform   
-- Apply as Lead Researcher:   https://docs.google.com/forms/d/e/1FAIpQLSezapg1YiCcaqrcuVrLbxasBxS7BJpmK6zgsuKgQzZscGQoQg/viewform  
+- Apply as NSRI Researcher: https://docs.google.com/forms/d/e/1FAIpQLSdRpaV17WwNGAAy86FF9VFYrpmZ_yRSQEMISS_Uq5lRHS1fow/viewform   
+- Apply as Lead Researcher: https://docs.google.com/forms/d/e/1FAIpQLSezapg1YiCcaqrcuVrLbxasBxS7BJpmK6zgsuKgQzZscGQoQg/viewform  
 - NSRI LinkedIn: https://www.linkedin.com/company/nsri-official/  
 - Discord: https://discord.gg/DZ9FwNYSeJ  
 - Chapter Guide: https://docs.google.com/document/d/1-sbIHMXYCO7OlAOu-e2Q4U62QWQkMR-JnDsBTpP10LA/edit  
